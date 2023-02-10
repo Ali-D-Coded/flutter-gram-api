@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  username    String  @unique
+  firstName   String?
+  lastName    String?
+  email       String  @unique
+  password    String
+  profile_pic Media?  @relation("profile_pic")
+
+  followedBy Follows[] @relation("following")
+  following  Follows[] @relation("follower")
+  premium    Boolean   @default(false)
+
+  comingEvent EventParticipants[] @relation("participant")
+
+  events Events[] @relation("host")
+  posts  Post[]
+
+  likedPosts PostLikedUsers[]
+  blocked    Boolean          @default(false)
+}
+
+model Follows {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  follower    User?  @relation("follower", fields: [followerId], references: [id])
+  followerId  String
+  following   User?  @relation("following", fields: [followingId], references: [id])
+  followingId String
+}
+
+model Media {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  name      String?  @db.VarChar(255)
+  mime      String?  @db.VarChar(255)
+  size      Decimal?
+  url       String   @db.VarChar(255)
+
+  userProPic User?   @relation("profile_pic", fields: [userId], references: [id], onDelete: Cascade)
+  userId     String? @unique
+  Post       Post?   @relation(fields: [postId], references: [id])
+  postId     String?
+}
+
+model Events {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  eventDate  String
+  eventTitle String
+  location   String
+
+  participants EventParticipants[]
+
+  host   User?   @relation("host", fields: [hostId], references: [id])
+  hostId String?
+}
+
+model EventParticipants {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  Event         Events? @relation(fields: [eventsId], references: [id])
+  eventsId      String?
+  participant   User?   @relation("participant", fields: [participantId], references: [id])
+  participantId String?
+}
+
+model Post {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  author   User?   @relation(fields: [authorId], references: [id])
+  authorId String?
+
+  title       String?
+  body        Json?
+  thumbImages Media[]
+  likes       PostLikedUsers[]
+}
+
+model PostLikedUsers {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  Post   Post?   @relation(fields: [postId], references: [id])
+  postId String
+  User   User?   @relation(fields: [userId], references: [id])
+  userId String?
+}
