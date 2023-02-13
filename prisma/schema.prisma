@@ -6,8 +6,10 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  // provider = "mysql"
+  // url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./flutterGram.db"
 }
 
 model User {
@@ -20,7 +22,7 @@ model User {
   lastName    String?
   email       String  @unique
   password    String
-  profile_pic Media?  @relation("profile_pic")
+  profile_pic Media[] @relation("profile_pic")
 
   followedBy Follows[] @relation("following")
   following  Follows[] @relation("follower")
@@ -50,13 +52,13 @@ model Media {
   id        String   @id @unique @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
-  name      String?  @db.VarChar(255)
-  mime      String?  @db.VarChar(255)
+  name      String?
+  mime      String?
   size      Decimal?
-  url       String   @db.VarChar(255)
+  url       String
 
   userProPic User?   @relation("profile_pic", fields: [userId], references: [id], onDelete: Cascade)
-  userId     String? @unique
+  userId     String?
   Post       Post?   @relation(fields: [postId], references: [id])
   postId     String?
 }
@@ -96,7 +98,7 @@ model Post {
   authorId String?
 
   title       String?
-  body        Json?
+  body        String?
   thumbImages Media[]
   likes       PostLikedUsers[]
 }
